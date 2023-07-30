@@ -1,0 +1,10 @@
+
+Stage 1
+
+- [x] Test basic minting with harcoded extension + settings
+- [ ] /mint mint a token2022 with extensions
+- [ ] /token/<mint> show balance and if authority gives ability to edit
+- [ ] Make form flexible to allow combining extensions (maybe not needed)
+- [ ] Deploy/Publish
+
+Stage 2
