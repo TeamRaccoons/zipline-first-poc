@@ -53,8 +53,10 @@ pub fn new_secp256k1_instruction_with_payload(
     // instruction_data[eth_address_offset..eth_address_offset.saturating_add(eth_pubkey.len())]
     //     .copy_from_slice(&eth_pubkey);
 
-    let message_data_offset = eth_address_offset.saturating_add(eth_pubkey.len());
-    // instruction_data[message_data_offset..].copy_from_slice(message_arr);
+    let message_data_offset = eth_address_offset
+        .saturating_add(eth_pubkey.len())
+        .saturating_add(4); // Skip the length of the prefix string
+                            // instruction_data[message_data_offset..].copy_from_slice(message_arr);
 
     let num_signatures = 1;
     instruction_data[0] = num_signatures;

@@ -70,6 +70,7 @@ export function createZiplineMessage({
       data,
     })),
   };
+  console.log(ziplineMessage);
 
   return {
     ziplineMessage,

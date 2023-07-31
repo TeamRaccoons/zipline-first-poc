@@ -111,8 +111,13 @@ async fn test_execute() {
             data: transfer_ix.data,
         }],
     };
-    let message_bytes = message.try_to_vec().unwrap();
+    let zipline_message_bytes = message.try_to_vec().unwrap();
 
+    let prefix = format!(
+        "\x19Ethereum Signed Message:\n{}",
+        zipline_message_bytes.len()
+    );
+    let message_bytes = [prefix.as_bytes(), &zipline_message_bytes].concat();
     let (secp256k1_instruction, secpk256k1_payload) =
         secp256k1_helper::new_secp256k1_instruction_with_payload(&secret_key, &message_bytes, 1, 8);
 
@@ -128,6 +133,7 @@ async fn test_execute() {
             signature: secpk256k1_payload.signature,
             recovery_id: secpk256k1_payload.recovery_id,
             eth_address,
+            prefix,
             message,
         }
         .data(),
@@ -140,20 +146,4 @@ async fn test_execute() {
     process_transaction(&mut context, &[secp256k1_instruction, execute_ix], &[])
         .await
         .unwrap();
-
-    // // Same message but signature is incorrect
-    // let mut signature: [u8; 64] = signature.into();
-    // signature[0] += 1; // Screw up the signature
-    // let result = process_transaction(
-    //     &mut context,
-    //     &[
-    //
-    //     ],
-    //     &[],
-    // )
-    // .await;
-    // assert_eq!(
-    //     result.unwrap_err().unwrap(),
-    //     TransactionError::InvalidAccountIndex // Obscure precompile error
-    // );
 }

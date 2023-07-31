@@ -11,6 +11,7 @@ import {
 } from "lib/ZiplineSdk";
 import { useConnection } from "@solana/wallet-adapter-react";
 import {
+  AddressLookupTableAccount,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
@@ -98,8 +99,22 @@ export const BasicsView: FC = ({}) => {
 
       client.on("signTransactions", async (e) => {
         const tx = e.transactions[0];
-        // TODO: Fetch ALTs, also support ver tx downstream
-        const message = TransactionMessage.decompile(tx.message);
+
+        const addressLookupTableAccounts = await Promise.all(
+          tx.message.addressTableLookups.map(async (lookup) => {
+            return new AddressLookupTableAccount({
+              key: lookup.accountKey,
+              state: AddressLookupTableAccount.deserialize(
+                await connection
+                  .getAccountInfo(lookup.accountKey)
+                  .then((res) => res.data)
+              ),
+            });
+          })
+        );
+        const message = TransactionMessage.decompile(tx.message, {
+          addressLookupTableAccounts,
+        });
 
         const {
           transaction: ziplineTransaction,
@@ -108,6 +123,7 @@ export const BasicsView: FC = ({}) => {
           connection,
           ethAddress,
           instructions: message.instructions,
+          addressLookupTableAccounts,
           signMessageAsync,
         });
 

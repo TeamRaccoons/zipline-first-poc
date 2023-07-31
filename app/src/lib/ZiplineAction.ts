@@ -1,4 +1,5 @@
 import {
+  AddressLookupTableAccount,
   Connection,
   TransactionInstruction,
   TransactionMessage,
@@ -19,11 +20,13 @@ export async function intoZiplineExecuteTransaction({
   ethAddress,
   instructions,
   signMessageAsync,
+  addressLookupTableAccounts,
 }: {
   connection: Connection;
   ethAddress: Buffer;
   instructions: TransactionInstruction[];
   signMessageAsync: ReturnType<typeof useSignMessage>["signMessageAsync"];
+  addressLookupTableAccounts?: AddressLookupTableAccount[];
 }) {
   const program = createZiplineProgram(connection);
   const pulleyAccount = await program.account.pulley.fetch(
@@ -57,15 +60,15 @@ export async function intoZiplineExecuteTransaction({
 
   const blockhashAndLastValidBlockHeight =
     await connection.getLatestBlockhash();
-  // Create a new TransactionMessage with version and compile it to legacy
-  const messageLegacy = new TransactionMessage({
+
+  const transactionMessage = new TransactionMessage({
     payerKey: RELAYER_KEYPAIR.publicKey,
     recentBlockhash: blockhashAndLastValidBlockHeight.blockhash,
     instructions: ziplineExecuteInstructions,
-  }).compileToLegacyMessage();
+  }).compileToV0Message(addressLookupTableAccounts);
 
   // Create a new VersionedTransacction which supports legacy and v0
-  const transaction = new VersionedTransaction(messageLegacy);
+  const transaction = new VersionedTransaction(transactionMessage);
   transaction.sign([RELAYER_KEYPAIR]);
   console.log(
     RELAYER_KEYPAIR.publicKey.toBase58(),
